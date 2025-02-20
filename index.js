@@ -33,7 +33,9 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const tasksCollection = client.db('TaskTrek').collection('tasks');
+    const usersCollection = client.db('TaskTrek').collection('users');
 
+    // add task api
     app.post('/tasks', async(req, res) =>{
         const data = req.body;
         const taskData = {
@@ -44,6 +46,23 @@ async function run() {
         // console.log(taskData);
         // res.send({message: 'data sent successful'})
         res.send(result);
+    })
+
+    app.post('/user', async(req, res)=>{
+      const userData = req.body;
+
+      const query = {email: userData?.email};
+
+      const isExist = await usersCollection.countDocuments(query);
+      
+      if(!isExist)
+      {
+        const result = await usersCollection.insertOne(userData);
+
+        res.send(result);
+      }
+      res.send({message : false});
+
     })
 
 
