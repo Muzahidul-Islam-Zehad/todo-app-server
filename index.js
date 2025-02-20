@@ -12,7 +12,7 @@ app.use(cors());
 // todo-app-zehad
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.j876r.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,33 +36,88 @@ async function run() {
     const usersCollection = client.db('TaskTrek').collection('users');
 
     // add task api
-    app.post('/tasks', async(req, res) =>{
-        const data = req.body;
-        const taskData = {
-            ...data, createdAt: format(new Date(), "PP") 
-        }
+    app.post('/tasks', async (req, res) => {
+      const data = req.body;
+      const taskData = {
+        ...data, createdAt: format(new Date(), "PP")
+      }
 
-        const result = await tasksCollection.insertOne(taskData);
-        // console.log(taskData);
-        // res.send({message: 'data sent successful'})
-        res.send(result);
+      const result = await tasksCollection.insertOne(taskData);
+      // console.log(taskData);
+      // res.send({message: 'data sent successful'})
+      res.send(result);
     })
 
-    app.post('/user', async(req, res)=>{
+    app.post('/user', async (req, res) => {
       const userData = req.body;
 
-      const query = {email: userData?.email};
+      const query = { email: userData?.email };
 
       const isExist = await usersCollection.countDocuments(query);
-      
-      if(!isExist)
-      {
+
+      if (!isExist) {
         const result = await usersCollection.insertOne(userData);
 
         res.send(result);
       }
-      res.send({message : false});
+      res.send({ message: false });
 
+    });
+
+    // app.get('/tasks', async(req, res) =>{
+    //   const email = req.query.email;
+    //   const query = {email};
+
+    //   const result = await tasksCollection.find(query).toArray();
+
+    //   res.send(result);
+    // })
+
+    // get tasks based on category
+    app.get('/tasks', async (req, res) => {
+      const email = req.query.email;
+      const query = { email };
+
+      try {
+        const aggregation = await tasksCollection.aggregate([
+          { $match: query },
+          {
+            $group: {
+              _id: "$category",
+              tasks: { $push: "$$ROOT" } // Push the entire document into an array
+            }
+          },
+          {
+            $project: {
+              category: "$_id",
+              tasks: 1,
+              _id: 0
+            }
+          }
+        ]).toArray();
+
+        // console.log(aggregation);
+        res.send(aggregation);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'An error occurred while retrieving tasks.' });
+      }
+    });
+
+
+    app.put('/tasks/:id', async(req, res)=>{
+      const id = req.params.id;
+      const {category} = req.body;
+
+      const query = {_id : new ObjectId(id)};
+      const updatedDoc = {
+        $set : {
+          category
+        }
+      }
+
+      const result = await tasksCollection.updateOne(query, updatedDoc);
+      res.send(result);
     })
 
 
@@ -74,10 +129,10 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/', (req,res)=>{
-    res.send('server is for todo app');
+app.get('/', (req, res) => {
+  res.send('server is for todo app');
 })
 
-app.listen(port, ()=>{
-    console.log('running on port: ', port);
+app.listen(port, () => {
+  console.log('running on port: ', port);
 })
