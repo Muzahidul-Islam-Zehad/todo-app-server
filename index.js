@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
 });
 
 // ✅ Added WebSocket Server
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws) => {
     console.log("✅ Client connected to WebSocket");
