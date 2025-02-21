@@ -104,7 +104,7 @@ async function run() {
       }
     });
 
-
+    //update the category
     app.put('/tasks/:id', async(req, res)=>{
       const id = req.params.id;
       const {category} = req.body;
@@ -113,6 +113,31 @@ async function run() {
       const updatedDoc = {
         $set : {
           category
+        }
+      }
+
+      const result = await tasksCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
+
+    //delete any task
+    app.delete('/tasks/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+
+      const result = await tasksCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    //update task data
+    app.patch('/tasks/:id', async(req, res)=>{
+      const id = req.params.id;
+      const updatedTask = req.body;
+      const query = {_id : new ObjectId(id)};
+      
+      const updatedDoc = {
+        $set: {
+          ...updatedTask
         }
       }
 
