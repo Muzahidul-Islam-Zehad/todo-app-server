@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { format } = require('date-fns');
 const WebSocket = require("ws"); // ✅ Added WebSocket import
+const http = require('http')
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -19,6 +20,8 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+const server = http.createServer(app);
 
 // ✅ Added WebSocket Server
 const wss = new WebSocket.Server({ server });
