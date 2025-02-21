@@ -154,6 +154,6 @@ app.get('/', (req, res) => {
   res.send('server is for todo app');
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log('🚀 Server running on port:', port);
 });
